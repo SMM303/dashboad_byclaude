@@ -3,3 +3,4 @@ gsd_dashboard/.streamlit/secrets.toml
 gsd_dashboard/data/uploads/
 __pycache__/
 *.py[cod]
+gsd_dashboard/auth_credentials.yaml
