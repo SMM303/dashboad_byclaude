@@ -100,21 +100,23 @@ if role in ("admin", "implementation"):
     for i, (_, ms) in enumerate(milestones_df.iterrows()):
         col = cols[i % 2]
         with col:
-            checked = ms["completed"]
-            icon    = "Complete" if checked else "Pending"
-            label   = f"{icon} **{ms['description']}**  \n"
-            label  += f"Target: {ms['target_date'].strftime('%d %b %Y')}"
-            if checked and ms["completed_date"]:
-                label += f", Done: {ms['completed_date']}"
+            checked     = ms["completed"]
+            badge_html  = status_badge("approved" if checked else "in_progress")
+            target_str  = ms["target_date"].strftime("%d %b %Y")
+            done_str    = f"  · Completed: {ms['completed_date']}" if checked and ms["completed_date"] else ""
+            caption_md  = (
+                f"{badge_html} &nbsp; **{ms['description']}**  \n"
+                f"<small>Target: {target_str}{done_str}</small>"
+            )
 
             if not checked:
-                if st.button(f"Mark complete - {ms['id']}", key=f"ms_{ms['id']}",
-                             width="stretch"):
+                st.markdown(caption_md, unsafe_allow_html=True)
+                if st.button(f"Mark complete — {ms['id']}", key=f"ms_{ms['id']}", width="stretch"):
                     write_milestone_complete(ms["id"])
                     log_action("complete_milestone", "milestone", ms["id"])
                     st.rerun()
             else:
-                st.success(label)
+                st.markdown(caption_md, unsafe_allow_html=True)
 
 else:
     # Executive / Oversight: read-only count

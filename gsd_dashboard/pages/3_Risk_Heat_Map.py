@@ -14,7 +14,7 @@ st.set_page_config(page_title="Risk Heat Map - GSD Dashboard", layout="wide")
 
 from auth.setup import require_auth, get_user_role, get_display_name
 from auth.audit import log_action
-from components.branding import inject_luxury_styles, render_sidebar_branding, status_badge
+from components.branding import inject_luxury_styles, render_sidebar_branding, status_badge, STATUS_LABELS
 from components.freshness import render_freshness_badges
 from components.charts import build_risk_heatmap, RISK_CAT_COLOURS
 from data.queries import fetch_risks, write_risk_update
@@ -123,9 +123,13 @@ st.dataframe(
 # ── Escalation alerts ─────────────────────────────────────────────────────────
 escalated_risks = risks_df[risks_df["status"] == "escalated"]
 if not escalated_risks.empty:
-    st.error(f"{len(escalated_risks)} escalated risk(s). Immediate attention required.")
+    count = len(escalated_risks)
+    st.warning(
+        f"{'1 risk requires' if count == 1 else f'{count} risks require'} "
+        f"immediate attention — escalation has been triggered."
+    )
     for _, r in escalated_risks.iterrows():
-        with st.expander(f"{r['id']} - {r['description']}"):
+        with st.expander(f"{r['id']} — {r['description']}"):
             st.markdown(f"**Escalation trigger:** {r['escalation_trigger']}")
             st.markdown(f"**Mitigation:** {r['mitigation']}")
             st.markdown(f"**Owner:** {r['owner']}")
@@ -161,20 +165,23 @@ if role in ("admin", "implementation"):
                 format_func=lambda x: impact_labels[x],
             )
 
+        _status_opts = ["active", "mitigated", "escalated", "closed"]
         new_status = st.selectbox(
-            "Status", ["active","mitigated","escalated","closed"],
-            index=["active","mitigated","escalated","closed"].index(sel_row["status"]),
+            "Status",
+            _status_opts,
+            index=_status_opts.index(sel_row["status"]),
+            format_func=lambda x: STATUS_LABELS.get(x, x.replace("_", " ").title()),
         )
         new_score = new_l * new_i
-        st.markdown(f"**New risk score: {new_score}** (likelihood {new_l} and impact {new_i})")
+        st.markdown(f"**New risk score: {new_score}** (likelihood {new_l} × impact {new_i})")
 
         if st.form_submit_button("Save Risk Update"):
             write_risk_update(
                 sel_id, new_l, new_i, new_status,
-                st.session_state.get("username","unknown"),
+                st.session_state.get("username", "unknown"),
             )
             log_action("update_risk", "risk", sel_id)
-            st.success(f"Risk {sel_id} updated. New score: {new_score}.")
+            st.success(f"Risk {sel_id} updated — new score {new_score}, status: {STATUS_LABELS.get(new_status, new_status)}.")
             st.rerun()
 
 # ── Risk history (Implementation and Oversight) ───────────────────────────────

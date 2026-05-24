@@ -15,7 +15,10 @@ import pandas as pd
 
 from auth.setup import require_auth, get_user_role, get_display_name
 from auth.audit import log_action
-from components.branding import inject_luxury_styles, render_sidebar_branding, status_badge
+from components.branding import (
+    inject_luxury_styles, render_sidebar_branding, status_badge,
+    STATUS_LABELS, QUALITY_GATE_LABELS, MODULE_STATUS_LABELS,
+)
 from components.freshness import render_freshness_badges
 from components.charts import build_deliverables_gantt, build_standards_coverage
 from data.queries import (
@@ -137,18 +140,23 @@ if role in ("admin", "implementation"):
         sel_id  = st.selectbox("Deliverable", list(opts.keys()), format_func=lambda x: opts[x])
         sel_row = deliverables_df[deliverables_df["id"] == sel_id].iloc[0]
 
+        _del_status_opts = ["not_started", "in_progress", "submitted", "under_review", "approved", "rejected"]
+        _gate_opts       = ["draft", "internal_review", "iom_review", "approved"]
+
         col_a, col_b = st.columns(2)
         with col_a:
             new_status = st.selectbox(
-                "New Status",
-                ["not_started","in_progress","submitted","under_review","approved","rejected"],
-                index=["not_started","in_progress","submitted","under_review","approved","rejected"].index(sel_row["status"]),
+                "Status",
+                _del_status_opts,
+                index=_del_status_opts.index(sel_row["status"]),
+                format_func=lambda x: STATUS_LABELS.get(x, x.replace("_", " ").title()),
             )
         with col_b:
             new_gate = st.selectbox(
                 "Quality Gate",
-                ["draft","internal_review","iom_review","approved"],
-                index=["draft","internal_review","iom_review","approved"].index(sel_row["quality_gate"]),
+                _gate_opts,
+                index=_gate_opts.index(sel_row["quality_gate"]),
+                format_func=lambda x: QUALITY_GATE_LABELS.get(x, x.replace("_", " ").title()),
             )
 
         submitted_on = None
@@ -159,9 +167,13 @@ if role in ("admin", "implementation"):
             updates = {"status": new_status, "quality_gate": new_gate}
             if submitted_on:
                 updates["submitted_at"] = submitted_on.isoformat()
-            write_deliverable_update(sel_id, updates, st.session_state.get("username",""))
+            write_deliverable_update(sel_id, updates, st.session_state.get("username", ""))
             log_action("update_deliverable_status", "deliverable", sel_id)
-            st.success(f"Deliverable {sel_id} updated to '{new_status}'.")
+            st.success(
+                f"Deliverable {sel_id} updated — "
+                f"{STATUS_LABELS.get(new_status, new_status)}, "
+                f"{QUALITY_GATE_LABELS.get(new_gate, new_gate)}."
+            )
             st.rerun()
 
 st.divider()
@@ -202,15 +214,17 @@ if role in ("admin", "implementation"):
         mod_opts = {r["id"]: f"{r['id']} - {r['title']}" for _, r in modules_df.iterrows()}
         sel_mod  = st.selectbox("Module", list(mod_opts.keys()), format_func=lambda x: mod_opts[x])
         sel_mod_row = modules_df[modules_df["id"] == sel_mod].iloc[0]
-        status_opts = ["not_started","outline_complete","draft_complete","standards_aligned","finalized"]
+        _mod_status_opts = ["not_started", "outline_complete", "draft_complete", "standards_aligned", "finalized"]
         new_mod_status = st.selectbox(
-            "New Status", status_opts,
-            index=status_opts.index(sel_mod_row["status"]),
+            "Status",
+            _mod_status_opts,
+            index=_mod_status_opts.index(sel_mod_row["status"]),
+            format_func=lambda x: MODULE_STATUS_LABELS.get(x, x.replace("_", " ").title()),
         )
         if st.form_submit_button("Save Module Status"):
             write_module_status(sel_mod, new_mod_status)
             log_action("update_module_status", "module", sel_mod)
-            st.success(f"Module {sel_mod} updated to '{new_mod_status}'.")
+            st.success(f"Module {sel_mod} — {MODULE_STATUS_LABELS.get(new_mod_status, new_mod_status)}.")
             st.rerun()
 
 # ── Standards Reference Table (Oversight + Implementation) ────────────────────

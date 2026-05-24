@@ -52,24 +52,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ── Credential-sync status banner ──────────────────────────────────────────
-_fly_sync = fly_available()
-if _fly_sync:
-    st.success(
-        "✅ **Fly.io credential sync enabled.** "
-        "Accounts you create or modify are automatically backed up to the "
-        "`AUTH_CREDENTIALS_JSON` Fly.io secret. The app can log users in from "
-        "that backup if Supabase is unreachable.",
-        icon=None,
-    )
-else:
-    st.info(
-        "ℹ️ **Fly.io credential sync is not configured.** "
-        "Accounts are stored in Supabase only. "
-        "To enable the Fly.io backup, add `FLY_API_TOKEN` and `FLY_APP_NAME` "
-        "to your Fly.io secrets (`flyctl secrets set …`).",
-        icon=None,
-    )
+# ── Credential-sync status indicator (operational, not technical) ──────────
+if not fly_available():
+    st.caption("ℹ Account backup is not enabled. Accounts are stored in the primary database only.")
 
 st.divider()
 
@@ -77,23 +62,29 @@ accounts = list_accounts()
 
 if accounts:
     table = pd.DataFrame(accounts)
-    table["role"] = table["role"].map(lambda value: ROLE_LABELS.get(value, value.title()))
-    table["active"] = table["active"].map(lambda value: "Active" if value else "Disabled")
+    table["role"]   = table["role"].map(lambda v: ROLE_LABELS.get(v, v.replace("_", " ").title()))
+    table["active"] = table["active"].map(lambda v: "Active" if v else "Disabled")
+
+    # Format ISO timestamps to readable dates
+    for col in ("created_at", "updated_at"):
+        if col in table.columns:
+            table[col] = pd.to_datetime(table[col], utc=True, errors="coerce").dt.strftime("%-d %b %Y, %H:%M")
+
     st.dataframe(
         table.rename(columns={
-            "username": "Username",
+            "username":     "Username",
             "display_name": "Name",
-            "role": "Role",
-            "active": "Status",
-            "created_by": "Created By",
-            "created_at": "Created",
-            "updated_at": "Updated",
+            "role":         "Role",
+            "active":       "Status",
+            "created_by":   "Created By",
+            "created_at":   "Created",
+            "updated_at":   "Last Updated",
         }),
         hide_index=True,
         width="stretch",
     )
 else:
-    st.info("No managed accounts found yet. Use the form below to create the first account.")
+    st.info("No accounts yet. Use the form below to create the first account.")
 
 st.divider()
 

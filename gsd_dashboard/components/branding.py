@@ -244,6 +244,87 @@ def inject_luxury_styles() -> None:
 # Badge helpers
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Shared label maps — import these wherever you need human-readable display
+# of DB enum values (dropdowns, success messages, table cells, filters).
+# ---------------------------------------------------------------------------
+
+#: Deliverable / general workflow statuses
+STATUS_LABELS: dict[str, str] = {
+    "not_started":      "Not Started",
+    "in_progress":      "In Progress",
+    "submitted":        "Submitted",
+    "under_review":     "Under Review",
+    "approved":         "Approved",
+    "rejected":         "Rejected",
+    "active":           "Active",
+    "mitigated":        "Mitigated",
+    "escalated":        "Escalated",
+    "closed":           "Closed",
+    "open":             "Open",
+    "resolved":         "Resolved",
+}
+
+#: Quality-gate stages (deliverables)
+QUALITY_GATE_LABELS: dict[str, str] = {
+    "draft":            "Draft",
+    "internal_review":  "Internal Review",
+    "iom_review":       "IOM Review",
+    "approved":         "Approved",
+}
+
+#: Curriculum module statuses
+MODULE_STATUS_LABELS: dict[str, str] = {
+    "not_started":       "Not Started",
+    "outline_complete":  "Outline Complete",
+    "draft_complete":    "Draft Complete",
+    "standards_aligned": "Standards Aligned",
+    "finalized":         "Finalized",
+}
+
+#: Stakeholder access statuses
+ACCESS_STATUS_LABELS: dict[str, str] = {
+    "confirmed":         "Confirmed",
+    "pending":           "Pending",
+    "to_be_requested":   "To Be Requested",
+}
+
+#: Risk / issue severity
+RISK_LEVEL_LABELS: dict[str, str] = {
+    "high":   "High",
+    "medium": "Medium",
+    "low":    "Low",
+}
+
+#: Issue categories
+ISSUE_CATEGORY_LABELS: dict[str, str] = {
+    "access":        "Access",
+    "document":      "Document",
+    "coordination":  "Coordination",
+    "scope":         "Scope",
+}
+
+#: ETL sync log → human-readable table names shown in the freshness sidebar
+FRESHNESS_TABLE_LABELS: dict[str, str] = {
+    "issues":        "Issues",
+    "stakeholders":  "Stakeholders",
+    "standards":     "Standards",
+    "kpi_snapshots": "KPI data",
+    "risks":         "Risks",
+    "deliverables":  "Deliverables",
+    "milestones":    "Milestones",
+}
+
+
+def label(value: str, mapping: dict[str, str]) -> str:
+    """Return the human-readable label for *value*, falling back to title-case."""
+    return mapping.get(value, value.replace("_", " ").title())
+
+
+# ---------------------------------------------------------------------------
+# Badge helpers
+# ---------------------------------------------------------------------------
+
 def badge(label: str, status: str) -> str:
     """Return an HTML badge string for inline markdown rendering."""
     slug = status.lower().replace(" ", "_")

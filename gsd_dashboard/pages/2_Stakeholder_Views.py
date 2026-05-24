@@ -17,7 +17,10 @@ import pandas as pd
 
 from auth.setup import require_auth, get_user_role, get_display_name
 from auth.audit import log_action
-from components.branding import inject_luxury_styles, render_sidebar_branding, status_badge
+from components.branding import (
+    inject_luxury_styles, render_sidebar_branding, status_badge,
+    STATUS_LABELS, ACCESS_STATUS_LABELS, RISK_LEVEL_LABELS, ISSUE_CATEGORY_LABELS,
+)
 from components.freshness import render_freshness_badges
 from components.charts import build_engagement_radar
 from data.queries import (
@@ -125,13 +128,32 @@ st.divider()
 if role in ("implementation",):
     st.subheader("Issue Log")
 
+    _iss_statuses = ["open", "resolved", "escalated"]
+    _risk_levels  = ["high", "medium", "low"]
+    _iss_cats     = ["access", "document", "coordination", "scope"]
+
     col_filters = st.columns(3)
     with col_filters[0]:
-        status_filter = st.selectbox("Status", ["All", "open", "resolved", "escalated"], key="iss_status")
+        status_filter = st.selectbox(
+            "Status",
+            ["All"] + _iss_statuses,
+            key="iss_status",
+            format_func=lambda x: STATUS_LABELS.get(x, x) if x != "All" else "All",
+        )
     with col_filters[1]:
-        risk_filter = st.selectbox("Risk Level", ["All", "high", "medium", "low"], key="iss_risk")
+        risk_filter = st.selectbox(
+            "Risk Level",
+            ["All"] + _risk_levels,
+            key="iss_risk",
+            format_func=lambda x: RISK_LEVEL_LABELS.get(x, x) if x != "All" else "All",
+        )
     with col_filters[2]:
-        cat_filter = st.selectbox("Category", ["All", "access", "document", "coordination", "scope"], key="iss_cat")
+        cat_filter = st.selectbox(
+            "Category",
+            ["All"] + _iss_cats,
+            key="iss_cat",
+            format_func=lambda x: ISSUE_CATEGORY_LABELS.get(x, x.replace("_", " ").title()) if x != "All" else "All",
+        )
 
     filtered = issues_df.copy()
     if status_filter != "All":
@@ -160,7 +182,11 @@ if role in ("implementation",):
         with st.form("resolve_issue_form"):
             opts   = {int(r["id"]): f"#{r['id']} - {str(r['description'])[:60]}" for _, r in open_issues.iterrows()}
             sel_id = st.selectbox("Select issue", list(opts.keys()), format_func=lambda x: opts[x])
-            new_status = st.selectbox("New status", ["resolved", "escalated"])
+            new_status = st.selectbox(
+                "New status",
+                ["resolved", "escalated"],
+                format_func=lambda x: STATUS_LABELS.get(x, x.replace("_", " ").title()),
+            )
             if st.form_submit_button("Update Issue"):
                 write_issue_status(sel_id, new_status)
                 log_action("update_issue_status", "issue", str(sel_id))
@@ -173,9 +199,17 @@ if role in ("implementation",):
         desc       = st.text_area("Description", placeholder="Describe the issue clearly…")
         col_a, col_b, col_c = st.columns(3)
         with col_a:
-            category = st.selectbox("Category", ["access","document","coordination","scope"])
+            category = st.selectbox(
+                "Category",
+                ["access", "document", "coordination", "scope"],
+                format_func=lambda x: ISSUE_CATEGORY_LABELS.get(x, x.replace("_", " ").title()),
+            )
         with col_b:
-            risk_level = st.selectbox("Risk Level", ["high","medium","low"])
+            risk_level = st.selectbox(
+                "Risk Level",
+                ["high", "medium", "low"],
+                format_func=lambda x: RISK_LEVEL_LABELS.get(x, x.replace("_", " ").title()),
+            )
         with col_c:
             from datetime import date, timedelta
             target_date = st.date_input("Target Resolution", value=date.today() + timedelta(days=5))
@@ -224,7 +258,11 @@ if role in ("admin", "implementation"):
         raw_stk = fetch_stakeholders("implementation")
         opts    = {r["id"]: r["org_unit"] for _, r in raw_stk.iterrows()}
         sel_id  = st.selectbox("Stakeholder", list(opts.keys()), format_func=lambda x: opts[x])
-        new_access  = st.selectbox("Access Status", ["confirmed","pending","to_be_requested"])
+        new_access  = st.selectbox(
+            "Access Status",
+            ["confirmed", "pending", "to_be_requested"],
+            format_func=lambda x: ACCESS_STATUS_LABELS.get(x, x.replace("_", " ").title()),
+        )
         new_window  = st.text_input("Consultation Window (free text)", placeholder="e.g. 2026-06-03")
         new_score   = st.slider("Engagement Score (post-consultation)", 0.0, 10.0, step=0.5, value=0.0)
         save_score  = st.checkbox("Save engagement score")
