@@ -174,7 +174,6 @@ if role in ("admin", "implementation"):
                 st.session_state.get("username","unknown"),
             )
             log_action("update_risk", "risk", sel_id)
-            st.cache_data.clear()
             st.success(f"Risk {sel_id} updated. New score: {new_score}.")
             st.rerun()
 

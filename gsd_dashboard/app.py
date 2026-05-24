@@ -42,17 +42,17 @@ def main():
     render_freshness_badges()
 
     # ── Home splash ─────────────────────────────────────────────────────────
-    from data.queries import load_payload, fetch_deliverables
-    from datetime import date
+    from datetime import datetime
+    from data.queries import fetch_deliverables, get_programme_metadata
 
-    payload = load_payload()
-    prog    = payload.programme
+    prog    = get_programme_metadata()
     df_del  = fetch_deliverables()
+    start_date = datetime.fromisoformat(prog["start_date"]).strftime("%d %b %Y")
 
     st.markdown(
-        f'<div class="prog-title">{prog.title}</div>'
-        f'<div class="prog-sub">{prog.org} · {prog.unit} · {prog.duty_station} · '
-        f'Start: {prog.start_date.strftime("%d %b %Y")}</div>',
+        f'<div class="prog-title">{prog["title"]}</div>'
+        f'<div class="prog-sub">{prog["org"]} · {prog["unit"]} · {prog["duty_station"]} · '
+        f'Start: {start_date}</div>',
         unsafe_allow_html=True,
     )
     st.markdown(
@@ -111,7 +111,7 @@ def main():
             <div class="home-panel">
               <h3>Start here</h3>
               <p>You are signed in as <strong>{role_display}</strong>. The dashboard only shows the data and actions available to this role.</p>
-              <p>Reporting line: <strong>{prog.reporting_line.direct}</strong> direct · <strong>{prog.reporting_line.overall}</strong> overall.</p>
+              <p>Reporting line: <strong>{prog["reporting_direct"]}</strong> direct · <strong>{prog["reporting_overall"]}</strong> overall.</p>
               <div class="status-key">
                 {status_badge("not_started")}
                 {status_badge("in_progress")}

@@ -161,7 +161,6 @@ if role in ("admin", "implementation"):
                 updates["submitted_at"] = submitted_on.isoformat()
             write_deliverable_update(sel_id, updates, st.session_state.get("username",""))
             log_action("update_deliverable_status", "deliverable", sel_id)
-            st.cache_data.clear()
             st.success(f"Deliverable {sel_id} updated to '{new_status}'.")
             st.rerun()
 
@@ -211,7 +210,6 @@ if role in ("admin", "implementation"):
         if st.form_submit_button("Save Module Status"):
             write_module_status(sel_mod, new_mod_status)
             log_action("update_module_status", "module", sel_mod)
-            st.cache_data.clear()
             st.success(f"Module {sel_mod} updated to '{new_mod_status}'.")
             st.rerun()
 

@@ -164,7 +164,6 @@ if role in ("implementation",):
             if st.form_submit_button("Update Issue"):
                 write_issue_status(sel_id, new_status)
                 log_action("update_issue_status", "issue", str(sel_id))
-                st.cache_data.clear()
                 st.success(f"Issue #{sel_id} marked as {new_status}.")
                 st.rerun()
 
@@ -193,7 +192,6 @@ if role in ("implementation",):
                     "status":      "open",
                 })
                 log_action("add_issue", "issue", "new")
-                st.cache_data.clear()
                 st.success("Issue logged.")
                 st.rerun()
             else:
@@ -236,6 +234,5 @@ if role in ("admin", "implementation"):
                 updates["engagement_score"] = new_score
             write_stakeholder_update(sel_id, updates)
             log_action("update_stakeholder", "stakeholder", sel_id)
-            st.cache_data.clear()
             st.success("Stakeholder record updated.")
             st.rerun()

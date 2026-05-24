@@ -32,6 +32,13 @@ def log_action(action: str, record_type: str, record_id: str = "") -> None:
     record_type : e.g. "page", "risk", "deliverable", "milestone"
     record_id   : the ID of the affected record (empty string for page-level events)
     """
+    if record_type == "page":
+        logged_pages = st.session_state.setdefault("_logged_page_views", set())
+        page_key = (action, str(record_id))
+        if page_key in logged_pages:
+            return
+        logged_pages.add(page_key)
+
     user     = st.session_state.get("username", "anonymous")
     role     = st.session_state.get("user_role", "unknown")
     session  = st.session_state.get("session_id")

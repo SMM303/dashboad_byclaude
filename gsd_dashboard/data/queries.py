@@ -62,6 +62,7 @@ def _secret(name: str, default=None):
         return default
 
 
+@st.cache_resource
 def _get_supabase():
     try:
         from supabase import create_client
@@ -116,11 +117,11 @@ def _load_supabase_payload() -> dict:
     if not client:
         return raw
 
-    raw["phases"] = _merge_rows_by_id(raw.get("phases", []), _fetch_table(client, "phases"))
-    raw["milestones"] = _merge_rows_by_id(raw.get("milestones", []), _fetch_table(client, "milestones"))
+    raw["phases"] = _merge_rows_by_id(raw.get("phases", []), _fetch_table(client, "phases", "id,name,start_week,end_week,status"))
+    raw["milestones"] = _merge_rows_by_id(raw.get("milestones", []), _fetch_table(client, "milestones", "id,description,target_date,completed,completed_date"))
 
-    deliverables = _merge_rows_by_id(raw.get("deliverables", []), _fetch_table(client, "deliverables"))
-    history_rows = _fetch_table(client, "deliverable_status_history")
+    deliverables = _merge_rows_by_id(raw.get("deliverables", []), _fetch_table(client, "deliverables", "id,name,description,phase_id,due_week,due_date,payment_pct,status,submitted_at,approved_at,reviewer,quality_gate"))
+    history_rows = _fetch_table(client, "deliverable_status_history", "deliverable_id,status,changed_at,changed_by")
     history_by_deliverable: dict[str, list[dict]] = {}
     for row in history_rows:
         deliverable_id = row.get("deliverable_id")
@@ -135,8 +136,8 @@ def _load_supabase_payload() -> dict:
             row["status_history"] = history_by_deliverable[row["id"]]
     raw["deliverables"] = deliverables
 
-    modules = _merge_rows_by_id(raw.get("modules", []), _fetch_table(client, "modules"))
-    standards_rows = _fetch_table(client, "standards_mappings")
+    modules = _merge_rows_by_id(raw.get("modules", []), _fetch_table(client, "modules", "id,title,phase_id,status,applicable_deliverable"))
+    standards_rows = _fetch_table(client, "standards_mappings", "module_id,source,standard,status")
     standards_by_module: dict[str, list[str]] = {}
     for row in standards_rows:
         module_id = row.get("module_id")
@@ -148,12 +149,12 @@ def _load_supabase_payload() -> dict:
             row["standards_mapped"] = standards_by_module[row["id"]]
     raw["modules"] = modules
 
-    stakeholder_rows = _fetch_table(client, "stakeholders")
+    stakeholder_rows = _fetch_table(client, "stakeholders", "id,org_unit,contact_name,contact_title,actor_category,role,method,access_status,consultation_window,engagement_score")
     if stakeholder_rows:
         raw["stakeholders"] = stakeholder_rows
 
-    risks = _merge_rows_by_id(raw.get("risks", []), _fetch_table(client, "risks"))
-    risk_history_rows = _fetch_table(client, "risk_history")
+    risks = _merge_rows_by_id(raw.get("risks", []), _fetch_table(client, "risks", "id,description,category,likelihood,impact,mitigation,escalation_trigger,status,owner,raised_date"))
+    risk_history_rows = _fetch_table(client, "risk_history", "risk_id,date,likelihood,impact,status")
     risk_history_by_risk: dict[str, list[dict]] = {}
     for row in risk_history_rows:
         risk_id = row.get("risk_id")
@@ -169,11 +170,11 @@ def _load_supabase_payload() -> dict:
             row["history"] = risk_history_by_risk[row["id"]]
     raw["risks"] = risks
 
-    issue_rows = _fetch_table(client, "issues")
+    issue_rows = _fetch_table(client, "issues", "id,date_raised,description,category,risk_level,assigned_to,target_date,status")
     if issue_rows:
         raw["issues"] = issue_rows
 
-    snapshots = _fetch_table(client, "kpi_snapshots")
+    snapshots = _fetch_table(client, "kpi_snapshots", "kpi_id,snapshot_date,value")
     snapshots_by_kpi: dict[str, list[dict]] = {}
     for row in snapshots:
         kpi_id = row.get("kpi_id")
@@ -192,6 +193,24 @@ def _load_supabase_payload() -> dict:
             kpi["current_value"] = points[-1].get("value")
 
     return raw
+
+
+@st.cache_data(ttl=3600)
+def get_programme_metadata() -> dict:
+    """Return lightweight programme metadata for the home page."""
+    with open(_CONFIG_PATH) as f:
+        raw = json.load(f)
+    programme = raw.get("programme", {})
+    reporting_line = programme.get("reporting_line", {})
+    return {
+        "title": programme.get("title", ""),
+        "org": programme.get("org", ""),
+        "unit": programme.get("unit", ""),
+        "duty_station": programme.get("duty_station", ""),
+        "start_date": programme.get("start_date", ""),
+        "reporting_direct": reporting_line.get("direct", ""),
+        "reporting_overall": reporting_line.get("overall", ""),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -472,6 +491,20 @@ def write_milestone_complete(milestone_id: str) -> None:
                 "completed": True,
                 "completed_date": date.today().isoformat(),
             }).eq("id", milestone_id).execute()
+
+
+def clear_programme_cache() -> None:
+    load_payload.clear()
+    get_programme_metadata.clear()
+    fetch_deliverables.clear()
+    fetch_milestones.clear()
+    fetch_phases.clear()
+    fetch_risks.clear()
+    fetch_issues.clear()
+    fetch_modules.clear()
+    fetch_stakeholders.clear()
+    fetch_standards.clear()
+    fetch_kpis.clear()
 
 
 def write_module_status(module_id: str, status: str) -> None:

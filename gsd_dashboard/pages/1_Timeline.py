@@ -112,7 +112,6 @@ if role in ("admin", "implementation"):
                              width="stretch"):
                     write_milestone_complete(ms["id"])
                     log_action("complete_milestone", "milestone", ms["id"])
-                    st.cache_data.clear()
                     st.rerun()
             else:
                 st.success(label)
