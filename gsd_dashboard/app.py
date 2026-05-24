@@ -12,7 +12,7 @@ st.set_page_config(
 )
 
 from auth.setup import enforce_session_timeout, is_authenticated, render_login_page
-from components.branding import inject_luxury_styles, render_sidebar_branding
+from components.branding import inject_luxury_styles, render_sidebar_branding, status_badge
 from components.freshness import render_freshness_badges
 
 
@@ -55,6 +55,13 @@ def main():
         f'Start: {prog.start_date.strftime("%d %b %Y")}</div>',
         unsafe_allow_html=True,
     )
+    st.markdown(
+        '<div class="overview-strip">'
+        '<strong>Use this dashboard for weekly programme control.</strong> '
+        'Start with deadlines and overdue items, then move into the relevant view to update evidence, risks, issues, or deliverables.'
+        '</div>',
+        unsafe_allow_html=True,
+    )
     st.divider()
 
     # Summary metrics row
@@ -75,24 +82,56 @@ def main():
     st.divider()
 
     role_display = {"admin": "Admin", "implementation": "Implementation", "executive": "Executive", "oversight": "Oversight"}.get(role, role.title())
-    next_deliverables = df_del.sort_values("due_date").head(3)
+    open_deliverables = df_del[~df_del["status"].isin(["approved"])]
+    next_deliverables = open_deliverables.sort_values("due_date").head(3) if not open_deliverables.empty else df_del.sort_values("due_date").head(3)
     next_items = "".join(
-        f"<li><strong>{row['id']}</strong> {row['name']} · {row['due_date'].strftime('%d %b %Y')} · {row['status'].replace('_', ' ').title()}</li>"
+        f"<li><strong>{row['id']}</strong> {row['name']}<br><small>{row['due_date'].strftime('%d %b %Y')} · {row['status'].replace('_', ' ').title()}</small></li>"
         for _, row in next_deliverables.iterrows()
     )
     if not next_items:
         next_items = "<li>No deliverables available.</li>"
 
-    st.markdown(
-        f"""
-        <div class="home-panel">
-          <h3>Start here</h3>
-          <p>Your current role is <strong>{role_display}</strong>. Use the sidebar to move between timeline, stakeholder, risk, deliverable, KPI, and file views. Each view only shows the data and actions available to your role.</p>
-          <p>Reporting line: <strong>{prog.reporting_line.direct}</strong> direct · <strong>{prog.reporting_line.overall}</strong> overall.</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    urgent_lines = []
+    if overdue:
+        urgent_lines.append(f"<li><strong>{overdue}</strong> deliverable{'s are' if overdue != 1 else ' is'} overdue.</li>")
+    if submitted:
+        urgent_lines.append(f"<li><strong>{submitted}</strong> deliverable{'s have' if submitted != 1 else ' has'} been submitted or moved into review.</li>")
+    if days_left < 0:
+        urgent_lines.append("<li>The nearest open deadline has already passed.</li>")
+    elif days_left <= 7:
+        urgent_lines.append(f"<li>The nearest open deadline is in <strong>{days_left}</strong> day{'s' if days_left != 1 else ''}.</li>")
+    if not urgent_lines:
+        urgent_lines.append("<li>No urgent deadline flags. Continue routine review.</li>")
+    urgent_html = "".join(urgent_lines)
+
+    c_start, c_attention = st.columns([1.2, 1])
+    with c_start:
+        st.markdown(
+            f"""
+            <div class="home-panel">
+              <h3>Start here</h3>
+              <p>You are signed in as <strong>{role_display}</strong>. The dashboard only shows the data and actions available to this role.</p>
+              <p>Reporting line: <strong>{prog.reporting_line.direct}</strong> direct · <strong>{prog.reporting_line.overall}</strong> overall.</p>
+              <div class="status-key">
+                {status_badge("not_started")}
+                {status_badge("in_progress")}
+                {status_badge("submitted")}
+                {status_badge("approved")}
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with c_attention:
+        st.markdown(
+            f"""
+            <div class="home-panel">
+              <h3>Needs attention</h3>
+              <ul class="attention-list">{urgent_html}</ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     col_next, col_access = st.columns([1.4, 1])
     with col_next:
@@ -110,12 +149,27 @@ def main():
             """
             <div class="home-panel">
               <h3>How to read the dashboard</h3>
-              <p>The top numbers summarize progress. Status badges show the current workflow stage. Editable forms are available only where your role is allowed to make changes.</p>
-              <p>Sessions expire automatically after inactivity for security.</p>
+              <p>The top numbers summarize progress. Badges show workflow stage. Editable forms only appear where your role can make changes.</p>
+              <p>Sessions expire automatically after inactivity for security. Sign out from the sidebar when finished.</p>
             </div>
             """,
             unsafe_allow_html=True,
         )
+
+    st.subheader("Common next actions")
+    a1, a2, a3, a4 = st.columns(4)
+    with a1:
+        st.markdown('<div class="home-panel compact"><div class="action-title">Check the timeline</div><div class="action-copy">Review phases, milestones, and upcoming dates.</div></div>', unsafe_allow_html=True)
+        st.page_link("pages/1_Timeline.py", label="Open Timeline")
+    with a2:
+        st.markdown('<div class="home-panel compact"><div class="action-title">Review deliverables</div><div class="action-copy">See due dates, quality gates, and module progress.</div></div>', unsafe_allow_html=True)
+        st.page_link("pages/4_Deliverables.py", label="Open Deliverables")
+    with a3:
+        st.markdown('<div class="home-panel compact"><div class="action-title">Scan risk status</div><div class="action-copy">Focus on high-score risks and escalation triggers.</div></div>', unsafe_allow_html=True)
+        st.page_link("pages/3_Risk_Heat_Map.py", label="Open Risks")
+    with a4:
+        st.markdown('<div class="home-panel compact"><div class="action-title">Upload evidence</div><div class="action-copy">Keep supporting files connected to the programme record.</div></div>', unsafe_allow_html=True)
+        st.page_link("pages/6_Files.py", label="Open Files")
 
 
 if __name__ == "__main__":

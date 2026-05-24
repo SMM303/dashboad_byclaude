@@ -17,6 +17,7 @@ h1, h2, h3, .stMetric label              { font-family: 'Inter', sans-serif; let
 html, body, .stApp                       { background: #F7F8FA; color: #172033; }
 .block-container                         { padding-top: 2rem; padding-bottom: 3rem; max-width: 1280px; }
 p, li, label, [data-testid="stMarkdownContainer"] { color: #283548; }
+small                                    { color: #667085; }
 
 /* ---- Sidebar ---------------------------------------------------------- */
 [data-testid="stSidebar"]                { background: #FFFFFF; border-right: 1px solid #D7DDE8; }
@@ -49,6 +50,20 @@ p, li, label, [data-testid="stMarkdownContainer"] { color: #283548; }
     margin: 10px 0 12px;
     font-size: 12px;
     color: #344054;
+}
+.sidebar-helper {
+    color: #667085;
+    font-size: 12px;
+    line-height: 1.45;
+    margin: 0 0 12px;
+}
+.nav-label {
+    color: #667085;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin: 4px 0 8px;
+    text-transform: uppercase;
 }
 .role-pill {
     display: inline-flex;
@@ -140,6 +155,16 @@ hr                                        { border-color: #E4E8F0; margin: 1.35r
     font-size: 13px; color: #667085; margin-top: 0px;
     line-height: 1.5;
 }
+.overview-strip {
+    background: #EDF4FF;
+    border: 1px solid #C9DAF8;
+    border-radius: 8px;
+    color: #16315F;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 13px 16px;
+    margin: 14px 0 18px;
+}
 .home-panel {
     background: #FFFFFF;
     border: 1px solid #E2E8F0;
@@ -148,6 +173,10 @@ hr                                        { border-color: #E4E8F0; margin: 1.35r
     min-height: 150px;
     margin-bottom: 16px;
     box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+.home-panel.compact {
+    min-height: auto;
+    padding: 14px 16px;
 }
 .home-panel h3 {
     color: #16315F;
@@ -159,6 +188,31 @@ hr                                        { border-color: #E4E8F0; margin: 1.35r
     font-size: 13px;
     line-height: 1.5;
     color: #475467;
+}
+.action-title {
+    color: #16315F;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+.action-copy {
+    color: #667085;
+    font-size: 12px;
+    line-height: 1.45;
+    min-height: 34px;
+}
+.status-key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+.attention-list {
+    margin: 8px 0 0;
+    padding-left: 18px;
+}
+.attention-list li {
+    margin-bottom: 6px;
 }
 .login-header {
     font-size: 24px;
@@ -240,10 +294,18 @@ def render_sidebar_branding(display_name: str, role: str) -> None:
         )
         role_display = {"admin": "Admin", "implementation": "Implementation", "executive": "Executive", "oversight": "Oversight"}.get(role, role.title())
         remaining = get_session_remaining_minutes()
+        role_notes = {
+            "admin": "Manage users and keep programme data current.",
+            "implementation": "Update progress, risks, issues, and files.",
+            "executive": "Review summary progress and key deadlines.",
+            "oversight": "Review risks, deliverables, and evidence.",
+        }
         st.markdown(
             f'<div class="sidebar-session">'
             f'<strong>{display_name or "Signed in"}</strong><br>'
             f'<span class="role-pill">{role_display}</span><br>'
+            f'<span class="sidebar-helper" style="display:block;margin-top:8px;">'
+            f'{role_notes.get(role, "Review the dashboard views available to your role.")}</span>'
             f'<span style="display:block;margin-top:8px;">Session expires after inactivity: '
             f'<strong>{remaining} min</strong></span>'
             f'</div>',
@@ -253,3 +315,4 @@ def render_sidebar_branding(display_name: str, role: str) -> None:
             log_action("logout", "session")
             logout()
         st.divider()
+        st.markdown('<div class="nav-label">Dashboard views</div>', unsafe_allow_html=True)
