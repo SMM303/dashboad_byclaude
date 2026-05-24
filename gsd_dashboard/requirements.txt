@@ -26,3 +26,6 @@ APScheduler>=3.10.0
 # Export helpers
 openpyxl>=3.1.0
 
+# Security floors for transitive/runtime packages flagged by Trivy
+jaraco.context>=6.1.0
+wheel>=0.46.2
