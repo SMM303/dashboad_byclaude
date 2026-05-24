@@ -26,15 +26,15 @@ name = get_display_name()
 render_sidebar_branding(name, role)
 
 with st.sidebar:
-    st.page_link("app.py",                            label="🏠  Home")
-    st.page_link("pages/1_Timeline.py",               label="📅  Timeline")
-    st.page_link("pages/2_Stakeholder_Views.py",      label="👥  Stakeholder Views")
-    st.page_link("pages/3_Risk_Heat_Map.py",          label="⚠️   Risk Heat Map")
-    st.page_link("pages/4_Deliverables.py",           label="📋  Deliverables")
-    st.page_link("pages/5_KPI_Dashboard.py",          label="📊  KPI Dashboard")
-    st.page_link("pages/6_Files.py",                  label="📁  Files")
+    st.page_link("app.py",                            label="Home")
+    st.page_link("pages/1_Timeline.py",               label="Timeline")
+    st.page_link("pages/2_Stakeholder_Views.py",      label="Stakeholder Views")
+    st.page_link("pages/3_Risk_Heat_Map.py",          label="Risk Heat Map")
+    st.page_link("pages/4_Deliverables.py",           label="Deliverables")
+    st.page_link("pages/5_KPI_Dashboard.py",          label="KPI Dashboard")
+    st.page_link("pages/6_Files.py",                  label="Files")
     if role == "admin":
-        st.page_link("pages/7_Admin.py",                  label="🔐  Admin")
+        st.page_link("pages/7_Admin.py",                  label="Admin")
     render_freshness_badges()
 
 log_action("view_timeline", "page", "timeline")
@@ -80,7 +80,7 @@ with col_r:
     st.subheader("Deliverable Calendar")
     for _, d in deliverables_df.iterrows():
         badge_html = status_badge(d["status"])
-        overdue_flag = " 🔴" if d["is_overdue"] else ""
+        overdue_flag = " Overdue" if d["is_overdue"] else ""
         st.markdown(
             f"**{d['id']}** {d['name']}  \n"
             f"{badge_html} &nbsp; Due: {d['due_date'].strftime('%d %b %Y')}"
@@ -101,7 +101,7 @@ if role in ("admin", "implementation"):
         col = cols[i % 2]
         with col:
             checked = ms["completed"]
-            icon    = "✅" if checked else "⬜"
+            icon    = "Complete" if checked else "Pending"
             label   = f"{icon} **{ms['description']}**  \n"
             label  += f"Target: {ms['target_date'].strftime('%d %b %Y')}"
             if checked and ms["completed_date"]:

@@ -45,6 +45,6 @@ def render_freshness_badges() -> None:
 
         threshold = _STALE_MINUTES.get(table, 120)
         if age_min > threshold:
-            st.sidebar.warning(f"⚠ {table}: {int(age_min)} min ago")
+            st.sidebar.warning(f"{table}: {int(age_min)} min ago")
         else:
             st.sidebar.caption(f"✓ {table}: {int(age_min)} min ago")

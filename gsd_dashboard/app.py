@@ -6,7 +6,7 @@ import streamlit as st
 
 st.set_page_config(
     page_title="IOM/GSD Programme Dashboard",
-    page_icon="🧭",
+    page_icon="GSD",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -30,14 +30,14 @@ def main():
     render_sidebar_branding(name, role)
 
     with st.sidebar:
-        st.page_link("pages/1_Timeline.py",           label="📅  Timeline",           icon=None)
-        st.page_link("pages/2_Stakeholder_Views.py",  label="👥  Stakeholder Views",  icon=None)
-        st.page_link("pages/3_Risk_Heat_Map.py",      label="⚠️   Risk Heat Map",      icon=None)
-        st.page_link("pages/4_Deliverables.py",       label="📋  Deliverables",        icon=None)
-        st.page_link("pages/5_KPI_Dashboard.py",      label="📊  KPI Dashboard",       icon=None)
-        st.page_link("pages/6_Files.py",              label="📁  Files",               icon=None)
+        st.page_link("pages/1_Timeline.py",           label="Timeline",           icon=None)
+        st.page_link("pages/2_Stakeholder_Views.py",  label="Stakeholder Views",  icon=None)
+        st.page_link("pages/3_Risk_Heat_Map.py",      label="Risk Heat Map",      icon=None)
+        st.page_link("pages/4_Deliverables.py",       label="Deliverables",        icon=None)
+        st.page_link("pages/5_KPI_Dashboard.py",      label="KPI Dashboard",       icon=None)
+        st.page_link("pages/6_Files.py",              label="Files",               icon=None)
         if role == "admin":
-            st.page_link("pages/7_Admin.py",          label="🔐  Admin",               icon=None)
+            st.page_link("pages/7_Admin.py",          label="Admin",               icon=None)
 
     render_freshness_badges()
 

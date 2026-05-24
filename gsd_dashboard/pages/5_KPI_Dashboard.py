@@ -32,15 +32,15 @@ name = get_display_name()
 render_sidebar_branding(name, role)
 
 with st.sidebar:
-    st.page_link("app.py",                            label="🏠  Home")
-    st.page_link("pages/1_Timeline.py",               label="📅  Timeline")
-    st.page_link("pages/2_Stakeholder_Views.py",      label="👥  Stakeholder Views")
-    st.page_link("pages/3_Risk_Heat_Map.py",          label="⚠️   Risk Heat Map")
-    st.page_link("pages/4_Deliverables.py",           label="📋  Deliverables")
-    st.page_link("pages/5_KPI_Dashboard.py",          label="📊  KPI Dashboard")
-    st.page_link("pages/6_Files.py",                  label="📁  Files")
+    st.page_link("app.py",                            label="Home")
+    st.page_link("pages/1_Timeline.py",               label="Timeline")
+    st.page_link("pages/2_Stakeholder_Views.py",      label="Stakeholder Views")
+    st.page_link("pages/3_Risk_Heat_Map.py",          label="Risk Heat Map")
+    st.page_link("pages/4_Deliverables.py",           label="Deliverables")
+    st.page_link("pages/5_KPI_Dashboard.py",          label="KPI Dashboard")
+    st.page_link("pages/6_Files.py",                  label="Files")
     if role == "admin":
-        st.page_link("pages/7_Admin.py",                  label="🔐  Admin")
+        st.page_link("pages/7_Admin.py",                  label="Admin")
     render_freshness_badges()
 
 log_action("view_kpi_dashboard", "page", "kpi_dashboard")
