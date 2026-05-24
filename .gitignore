@@ -1,6 +1,19 @@
-gsd_dashboard/.venv/
-gsd_dashboard/.streamlit/secrets.toml
-gsd_dashboard/data/uploads/
+### OS files
+.DS_Store
+
+### Python
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+### Local environments
+gsd_dashboard/.venv/
+
+### Local secrets and uploads
+.env
+.env.*
+gsd_dashboard/.streamlit/secrets.toml
+gsd_dashboard/data/uploads/
 gsd_dashboard/auth_credentials.yaml

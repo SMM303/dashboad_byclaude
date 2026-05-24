@@ -10,7 +10,7 @@ primary_region = 'cdg'
   dockerfile = 'Dockerfile'
 
 [env]
-  DEMO_MODE = 'true'
+  DEMO_MODE = 'false'
 
 [http_service]
   internal_port = 8501
